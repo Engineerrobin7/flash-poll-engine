@@ -1,8 +1,13 @@
 // Dynamic API configuration
 const getApiBase = () => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  // Fallback for local development if VITE_API_URL is missing
-  return `http://${window.location.hostname}:8080/api`;
+  let url = import.meta.env.VITE_API_URL;
+  if (url) {
+    console.log("ENGINE: Using Environment API URL:", url);
+    return url.endsWith('/') ? url.slice(0, -1) : url;
+  }
+  const fallback = `http://${window.location.hostname}:8080/api`;
+  console.warn("ENGINE: No VITE_API_URL found. Falling back to:", fallback);
+  return fallback;
 };
 
 const API_BASE = getApiBase();

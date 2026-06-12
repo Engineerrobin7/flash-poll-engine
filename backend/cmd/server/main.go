@@ -48,7 +48,7 @@ func main() {
 	r.Use(chimiddleware.Recoverer)
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "https://*.vercel.app", "https://*.netlify.app", "*"},
+		AllowedOrigins:   []string{"http://localhost:5173", "https://flash-poll-engine-self.vercel.app", "https://*.vercel.app", "*"},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization", "X-Request-Id"},
 		AllowCredentials: true,
