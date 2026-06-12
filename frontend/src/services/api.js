@@ -47,7 +47,7 @@ export const votePoll = async (pollId, optionId) => {
   const res = await fetch(`${API_BASE}/polls/${pollId}/vote`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ option_id: optionId }),
+    body: JSON.stringify({ option_id: Number(optionId) }), // Force Number
   });
   const json = await handleResponse(res);
   return json.data;

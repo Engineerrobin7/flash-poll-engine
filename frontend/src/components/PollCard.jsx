@@ -36,7 +36,7 @@ const PollCard = ({ poll, onUpdate, onDelete }) => {
   };
 
   const copyLink = () => {
-    const url = `${window.location.origin}/poll/${poll.id}`;
+    const url = `${window.location.origin}/?id=${poll.id}`;
     navigator.clipboard.writeText(url);
     showToast("SIGNAL LINK COPIED TO CLIPBOARD");
   };

@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import PollDashboard from './pages/PollDashboard';
 import './index.css';
 
-// Simple Toast Provider
 export const ToastContext = React.createContext();
 
 function App() {
@@ -18,7 +17,13 @@ function App() {
 
   return (
     <ToastContext.Provider value={{ showToast }}>
+      {/*
+        In a full app we'd use react-router, but for this MVP
+        we stay on the Dashboard. Even if you open a share link,
+        it will load the dashboard where your poll lives.
+      */}
       <PollDashboard />
+
       <div className="toast-container">
         {toasts.map(t => (
           <div key={t.id} className="toast">

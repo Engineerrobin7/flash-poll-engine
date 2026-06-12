@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/(api|health)(.*)",
+      "destination": "https://flash-poll-engine-5n76.onrender.com/$1$2"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
