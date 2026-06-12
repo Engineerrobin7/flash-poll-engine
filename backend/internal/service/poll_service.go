@@ -75,6 +75,9 @@ func (s *PollService) CreatePoll(ctx context.Context, question string, category 
 		return nil, err
 	}
 
+	// Broadcast the new poll to all connected clients
+	s.Broker.BroadcastUpdate(poll)
+
 	return poll, nil
 }
 

@@ -6,7 +6,17 @@ const PollCard = ({ poll, onUpdate, onDelete, isHighlighted }) => {
   const [loading, setLoading] = useState(false);
   const [votedId, setVotedId] = useState(null);
   const [showStats, setShowStats] = useState(false);
+  const [pulse, setPulse] = useState(false);
   const { showToast } = useContext(ToastContext);
+
+  // Trigger pulse when poll data changes from external source (SSE)
+  React.useEffect(() => {
+    if (poll.total_votes > 0) {
+      setPulse(true);
+      const timer = setTimeout(() => setPulse(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [poll.total_votes]);
 
   const castVote = async (oid) => {
     if (votedId || loading) return;
@@ -54,7 +64,10 @@ const PollCard = ({ poll, onUpdate, onDelete, isHighlighted }) => {
       style={isHighlighted ? { border: '6px solid var(--tech)', transform: 'scale(1.02)', boxShadow: '12px 12px 0px 0px #000' } : {}}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-        <span className={`tag tag-${poll.category}`}>{poll.category} {isHighlighted && "// TARGET"}</span>
+        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+          <span className={`tag tag-${poll.category}`}>{poll.category} {isHighlighted && "// TARGET"}</span>
+          {pulse && <span className="tag" style={{background: '#76ff03', animation: 'blink 0.5s infinite'}}>LIVE UPDATE</span>}
+        </div>
         <div style={{display: 'flex', gap: '8px'}}>
           <button className="tag" onClick={copyLink} style={{background: '#fff', cursor: 'pointer'}}>SHARE</button>
           <button className="tag" onClick={remove} style={{background: '#000', color: '#fff', cursor: 'pointer'}}>PURGE</button>

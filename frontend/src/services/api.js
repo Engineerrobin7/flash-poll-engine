@@ -2,6 +2,7 @@
 const getApiBase = () => {
   let url = import.meta.env.VITE_API_URL;
   if (url) {
+    url = url.trim();
     if (!url.includes('/api')) {
       url = url.endsWith('/') ? `${url}api` : `${url}/api`;
     }

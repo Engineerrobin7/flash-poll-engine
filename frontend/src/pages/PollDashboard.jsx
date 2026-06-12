@@ -5,27 +5,29 @@ import { usePolls } from '../hooks/usePolls';
 import { fetchStats } from '../services/api';
 
 const PollDashboard = () => {
-  const { polls, loading, refresh, addPoll, updatePoll, removePoll } = usePolls();
-  const [filter, setFilter] = useState('ALL');
   const [stats, setStats] = useState({ total_polls: 0, total_votes: 0 });
+
+  const loadStats = useCallback(async () => {
+    try {
+      const data = await fetchStats();
+      setStats(data);
+    } catch (e) {
+      console.error("Stats fetch failed:", e);
+    }
+  }, []);
+
+  const { polls, loading, addPoll, updatePoll, removePoll } = usePolls(loadStats);
+  const [filter, setFilter] = useState('ALL');
 
   // Handle Shared Link ID
   const urlParams = new URLSearchParams(window.location.search);
   const sharedId = urlParams.get('id');
 
   useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const data = await fetchStats();
-        setStats(data);
-      } catch (e) {
-        console.error("Stats fetch failed:", e);
-      }
-    };
     loadStats();
     const interval = setInterval(loadStats, 10000);
     return () => clearInterval(interval);
-  }, [polls]);
+  }, [loadStats]);
 
   const filteredPolls = useMemo(() => {
     // If we have a shared ID, we prioritize showing that poll at the top
@@ -42,6 +44,11 @@ const PollDashboard = () => {
   }, [polls, filter, sharedId]);
 
   const categories = ['ALL', 'TECH', 'BUSINESS', 'DESIGN'];
+
+  const handleCreated = (poll) => {
+    addPoll(poll);
+    loadStats();
+  };
 
   return (
     <div className="container" style={{paddingTop: '100px'}}>
@@ -65,7 +72,7 @@ const PollDashboard = () => {
       {/* Hide create form if viewing a specific shared poll to focus the user */}
       {!sharedId && (
         <section style={{background: '#fff', border: '4px solid #000', padding: '30px', boxShadow: '8px 8px 0px 0px #000', marginBottom: '80px'}}>
-          <CreatePollForm onCreated={addPoll} />
+          <CreatePollForm onCreated={handleCreated} />
         </section>
       )}
 

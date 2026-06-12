@@ -45,8 +45,8 @@ func (b *Broker) listen() {
 				case clientChan <- event:
 					// Success
 				default:
-					// Client too slow, drop message to prevent server deadlock
-					log.Println("Client channel full, dropping message")
+					// Client too slow, drop message
+					log.Println("Skipping slow client")
 				}
 			}
 			b.mu.Unlock()
@@ -64,7 +64,7 @@ func (b *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("X-Accel-Buffering", "no") // For Nginx/Render proxies
 
 	messageChan := make(chan []byte)
 	b.newClients <- messageChan

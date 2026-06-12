@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchPolls, API_BASE } from '../services/api';
 
-export const usePolls = () => {
+export const usePolls = (onUpdateReceived) => {
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const reconnectTimeoutRef = useRef(null);
@@ -25,6 +25,7 @@ export const usePolls = () => {
     eventSource.onmessage = (event) => {
       try {
         const updatedPoll = JSON.parse(event.data);
+        console.log("ENGINE: Signal Received via SSE", updatedPoll.id);
         setPolls(prev => {
           const exists = prev.find(p => p.id === updatedPoll.id);
           if (exists) {
@@ -32,6 +33,7 @@ export const usePolls = () => {
           }
           return [updatedPoll, ...prev]; // Add new poll to the top live
         });
+        if (onUpdateReceived) onUpdateReceived();
       } catch (err) {
         console.error("SSE parse error", err);
       }
