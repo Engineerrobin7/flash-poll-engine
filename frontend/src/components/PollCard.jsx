@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { votePoll, deletePoll } from '../services/api';
 import { ToastContext } from '../App';
 
-const PollCard = ({ poll, onUpdate, onDelete }) => {
+const PollCard = ({ poll, onUpdate, onDelete, isHighlighted }) => {
   const [loading, setLoading] = useState(false);
   const [votedId, setVotedId] = useState(null);
   const [showStats, setShowStats] = useState(false);
@@ -18,7 +18,8 @@ const PollCard = ({ poll, onUpdate, onDelete }) => {
       setShowStats(true);
       showToast("VOTE REGISTERED // ANALYTICS UPDATED");
     } catch (e) {
-      showToast("SIGNAL LOST: VOTE FAILED");
+      // SHOW THE REAL ERROR MESSAGE FROM THE BACKEND
+      showToast(`VOTE FAILED: ${e.message.toUpperCase()}`);
     } finally {
       setLoading(false);
     }
@@ -31,7 +32,7 @@ const PollCard = ({ poll, onUpdate, onDelete }) => {
       onDelete(poll.id);
       showToast("POLL PURGED FROM DATABASE");
     } catch (e) {
-      showToast("ERROR: PURGE FAILED");
+      showToast(`ERROR: ${e.message.toUpperCase()}`);
     }
   };
 
@@ -44,9 +45,14 @@ const PollCard = ({ poll, onUpdate, onDelete }) => {
   const isRevealed = votedId || showStats;
 
   return (
-    <div className="poll-card" role="article" aria-label={`Poll: ${poll.question}`}>
+    <div
+      className="poll-card"
+      role="article"
+      aria-label={`Poll: ${poll.question}`}
+      style={isHighlighted ? { border: '6px solid var(--accent)', transform: 'scale(1.02)', boxShadow: '12px 12px 0px 0px #000' } : {}}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-        <span className={`tag tag-${poll.category}`}>{poll.category}</span>
+        <span className={`tag tag-${poll.category}`}>{poll.category} {isHighlighted && "// SHARED SIGNAL"}</span>
         <div style={{display: 'flex', gap: '8px'}}>
           <button className="tag" onClick={copyLink} style={{background: '#fff', cursor: 'pointer'}}>SHARE</button>
           <button className="tag" onClick={remove} style={{background: '#000', color: '#fff', cursor: 'pointer'}} aria-label="Delete Poll">PURGE</button>
