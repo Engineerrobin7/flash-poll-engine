@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { votePoll, deletePoll } from '../services/api';
 import { ToastContext } from '../App';
 
@@ -10,7 +10,7 @@ const PollCard = ({ poll, onUpdate, onDelete, isHighlighted }) => {
   const { showToast } = useContext(ToastContext);
 
   // Trigger pulse when poll data changes from external source (SSE)
-  React.useEffect(() => {
+  useEffect(() => {
     if (poll.total_votes > 0) {
       setPulse(true);
       const timer = setTimeout(() => setPulse(false), 1000);

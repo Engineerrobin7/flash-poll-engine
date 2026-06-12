@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import PollCard from '../components/PollCard';
 import CreatePollForm from '../components/CreatePollForm';
 import { usePolls } from '../hooks/usePolls';
