@@ -1,0 +1,34 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+backend/server
+backend/main
+
+# Databases
+*.db
+*.db-journal
+
+# Packages
+node_modules/
+.npm/
+
+# Build outputs
+dist/
+build/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
