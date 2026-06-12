@@ -41,7 +41,6 @@ func main() {
 
 	r := chi.NewRouter()
 
-	// Standard Production Middleware
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
 	r.Use(middleware.Logging)
@@ -60,15 +59,18 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
-	r.Get("/api/events", broker.ServeHTTP)
-	r.Get("/api/stats", pollHandler.GetStats)
-
+	// ALL API routes now consistently under /api
 	r.Route("/api", func(r chi.Router) {
-		r.Use(middleware.RateLimit)
-		r.Get("/polls", pollHandler.GetPolls)
-		r.Post("/polls", pollHandler.CreatePoll)
-		r.Patch("/polls/{id}/vote", pollHandler.Vote)
-		r.Delete("/polls/{id}", pollHandler.DeletePoll)
+		r.Get("/events", broker.ServeHTTP)
+		r.Get("/stats", pollHandler.GetStats)
+
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.RateLimit)
+			r.Get("/polls", pollHandler.GetPolls)
+			r.Post("/polls", pollHandler.CreatePoll)
+			r.Patch("/polls/{id}/vote", pollHandler.Vote)
+			r.Delete("/polls/{id}", pollHandler.DeletePoll)
+		})
 	})
 
 	port := os.Getenv("PORT")
@@ -81,7 +83,6 @@ func main() {
 		Handler: r,
 	}
 
-	// Graceful Shutdown Logic
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
@@ -94,12 +95,8 @@ func main() {
 
 	<-done
 	log.Print("Server Stopping...")
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server Shutdown Failed:%+v", err)
-	}
+	srv.Shutdown(ctx)
 	log.Print("Server Exited Cleanly")
 }

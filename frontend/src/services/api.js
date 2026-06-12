@@ -1,30 +1,29 @@
-// Dynamic API configuration
+// Smart URL detector
 const getApiBase = () => {
   let url = import.meta.env.VITE_API_URL;
+
   if (url) {
+    // Automatically ensure /api suffix
+    if (!url.includes('/api')) {
+      url = url.endsWith('/') ? `${url}api` : `${url}/api`;
+    }
     return url.endsWith('/') ? url.slice(0, -1) : url;
   }
+
   return `http://${window.location.hostname}:8080/api`;
 };
 
-const API_BASE = getApiBase();
+export const API_BASE = getApiBase();
 
-// Helper to handle responses safely
 const handleResponse = async (res) => {
   const contentType = res.headers.get("content-type");
-
-  // If not JSON, it's likely a server error or rate limit text
   if (!contentType || !contentType.includes("application/json")) {
     const text = await res.text();
-    throw new Error(text || `Server Error: ${res.status}`);
+    throw new Error(text || `Error ${res.status}: Route not found on backend`);
   }
 
   const json = await res.json();
-
-  if (!res.ok) {
-    throw new Error(json.error?.message || json.message || 'API Request Failed');
-  }
-
+  if (!res.ok) throw new Error(json.error?.message || json.message || 'Request Failed');
   return json;
 };
 
@@ -63,7 +62,7 @@ export const deletePoll = async (pollId) => {
 };
 
 export const fetchStats = async () => {
-  const res = await fetch(`${API_BASE.replace('/api', '')}/api/stats`);
+  const res = await fetch(`${API_BASE}/stats`);
   const json = await handleResponse(res);
   return json.data;
 };

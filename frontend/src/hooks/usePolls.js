@@ -1,10 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchPolls } from '../services/api';
-
-const getEventsUrl = () => {
-  if (import.meta.env.VITE_API_URL) return `${import.meta.env.VITE_API_URL}/events`;
-  return `http://${window.location.hostname}:8080/api/events`;
-};
+import { fetchPolls, API_BASE } from '../services/api';
 
 export const usePolls = () => {
   const [polls, setPolls] = useState([]);
@@ -26,27 +21,29 @@ export const usePolls = () => {
   }, []);
 
   const setupSSE = useCallback(() => {
-    const eventSource = new EventSource(getEventsUrl());
+    // Consistent URL usage
+    const eventSource = new EventSource(`${API_BASE}/events`);
 
     eventSource.onmessage = (event) => {
       try {
         const updatedPoll = JSON.parse(event.data);
-        setPolls(prev => prev.map(p => p.id === updatedPoll.id ? updatedPoll : p));
+        setPolls(prev => {
+          const exists = prev.find(p => p.id === updatedPoll.id);
+          if (exists) {
+            return prev.map(p => p.id === updatedPoll.id ? updatedPoll : p);
+          }
+          return [updatedPoll, ...prev];
+        });
       } catch (err) {
-        console.error("Failed to parse SSE data:", err);
+        console.error("SSE parse error", err);
       }
     };
 
     eventSource.onerror = (err) => {
-      console.error("SSE connection lost. Reconnecting in 5s...", err);
+      console.log("SSE dropped. Reconnecting...");
       eventSource.close();
-
-      // Prevent multiple concurrent timeouts
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-
-      reconnectTimeoutRef.current = setTimeout(() => {
-        setupSSE();
-      }, 5000);
+      reconnectTimeoutRef.current = setTimeout(() => setupSSE(), 5000);
     };
 
     return eventSource;
@@ -55,7 +52,6 @@ export const usePolls = () => {
   useEffect(() => {
     refresh();
     const es = setupSSE();
-
     return () => {
       if (es) es.close();
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
