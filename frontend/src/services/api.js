@@ -1,15 +1,12 @@
-// Smart URL detector
+// Smart URL detector - Handles any Vercel configuration
 const getApiBase = () => {
   let url = import.meta.env.VITE_API_URL;
-
   if (url) {
-    // Automatically ensure /api suffix
     if (!url.includes('/api')) {
       url = url.endsWith('/') ? `${url}api` : `${url}/api`;
     }
     return url.endsWith('/') ? url.slice(0, -1) : url;
   }
-
   return `http://${window.location.hostname}:8080/api`;
 };
 
@@ -19,11 +16,12 @@ const handleResponse = async (res) => {
   const contentType = res.headers.get("content-type");
   if (!contentType || !contentType.includes("application/json")) {
     const text = await res.text();
-    throw new Error(text || `Error ${res.status}: Route not found on backend`);
+    if (res.status === 404) throw new Error("POLL_EXPIRED_OR_RESET");
+    throw new Error(text || `Error ${res.status}`);
   }
 
   const json = await res.json();
-  if (!res.ok) throw new Error(json.error?.message || json.message || 'Request Failed');
+  if (!res.ok) throw new Error(json.error?.message || json.message || 'FAILED');
   return json;
 };
 
@@ -47,7 +45,7 @@ export const votePoll = async (pollId, optionId) => {
   const res = await fetch(`${API_BASE}/polls/${pollId}/vote`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ option_id: Number(optionId) }), // Force Number
+    body: JSON.stringify({ option_id: Number(optionId) }),
   });
   const json = await handleResponse(res);
   return json.data;

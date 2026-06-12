@@ -18,8 +18,12 @@ const PollCard = ({ poll, onUpdate, onDelete, isHighlighted }) => {
       setShowStats(true);
       showToast("VOTE REGISTERED // ANALYTICS UPDATED");
     } catch (e) {
-      // SHOW THE REAL ERROR MESSAGE FROM THE BACKEND
-      showToast(`VOTE FAILED: ${e.message.toUpperCase()}`);
+      if (e.message === "POLL_EXPIRED_OR_RESET") {
+        showToast("SIGNAL EXPIRED: BACKEND RESET. REFRESHING...");
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        showToast(`VOTE FAILED: ${e.message.toUpperCase()}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -47,15 +51,13 @@ const PollCard = ({ poll, onUpdate, onDelete, isHighlighted }) => {
   return (
     <div
       className="poll-card"
-      role="article"
-      aria-label={`Poll: ${poll.question}`}
-      style={isHighlighted ? { border: '6px solid var(--accent)', transform: 'scale(1.02)', boxShadow: '12px 12px 0px 0px #000' } : {}}
+      style={isHighlighted ? { border: '6px solid var(--tech)', transform: 'scale(1.02)' } : {}}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-        <span className={`tag tag-${poll.category}`}>{poll.category} {isHighlighted && "// SHARED SIGNAL"}</span>
+        <span className={`tag tag-${poll.category}`}>{poll.category} {isHighlighted && "// TARGET"}</span>
         <div style={{display: 'flex', gap: '8px'}}>
           <button className="tag" onClick={copyLink} style={{background: '#fff', cursor: 'pointer'}}>SHARE</button>
-          <button className="tag" onClick={remove} style={{background: '#000', color: '#fff', cursor: 'pointer'}} aria-label="Delete Poll">PURGE</button>
+          <button className="tag" onClick={remove} style={{background: '#000', color: '#fff', cursor: 'pointer'}}>PURGE</button>
         </div>
       </div>
 
@@ -74,33 +76,17 @@ const PollCard = ({ poll, onUpdate, onDelete, isHighlighted }) => {
             )}
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-              <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                {votedId === opt.id && <span style={{fontSize: '20px'}}>🎯</span>}
-                <span>{opt.option_text}</span>
-              </div>
-
-              {isRevealed && (
-                <span style={{ fontWeight: '900' }}>{Math.round(opt.percentage)}%</span>
-              )}
+              <span>{opt.option_text}</span>
+              {isRevealed && <span style={{ fontWeight: '900' }}>{Math.round(opt.percentage)}%</span>}
             </div>
           </button>
         ))}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', borderTop: '3px solid #000', paddingTop: '15px' }}>
-        <div style={{ fontWeight: '800', fontSize: '12px', textTransform: 'uppercase' }}>
-          {poll.total_votes} SIGNALS RECORDED // {new Date(poll.created_at).toLocaleDateString()}
+      <div style={{ marginTop: '20px', borderTop: '3px solid #000', paddingTop: '15px' }}>
+        <div style={{ fontWeight: '800', fontSize: '12px' }}>
+          {poll.total_votes} SIGNALS // {new Date(poll.created_at).toLocaleDateString()}
         </div>
-
-        {!votedId && (
-          <button
-            className="tag"
-            style={{ cursor: 'pointer', background: isRevealed ? '#eee' : '#fff' }}
-            onClick={() => setShowStats(!showStats)}
-          >
-            {showStats ? 'HIDE ANALYTICS' : 'VIEW ANALYTICS'}
-          </button>
-        )}
       </div>
     </div>
   );
