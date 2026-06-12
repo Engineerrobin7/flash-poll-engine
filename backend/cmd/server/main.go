@@ -59,6 +59,7 @@ func main() {
 	r.Get("/api/events", broker.ServeHTTP)
 
 	r.Route("/api", func(r chi.Router) {
+		r.Use(middleware.RateLimit)
 		r.Get("/polls", pollHandler.GetPolls)
 		r.Post("/polls", pollHandler.CreatePoll)
 		r.Patch("/polls/{id}/vote", pollHandler.Vote)
