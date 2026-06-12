@@ -1,4 +1,4 @@
-# ⚡ Flash-Poll Engine
+#  Flash-Poll Engine
 
 > **Internal real-time polling for teams that move fast.**
 
@@ -6,7 +6,7 @@ Built for the LeMiCi Engineering Technical Assessment, Flash-Poll is a high-velo
 
 ---
 
-## 🛠 The Stack
+##  The Stack
 
 - **Backend**: Go 1.25 (Standard library + `chi` router)
 - **Database**: SQLite (Pure Go / CGO-free via `modernc.org/sqlite`)
@@ -16,7 +16,7 @@ Built for the LeMiCi Engineering Technical Assessment, Flash-Poll is a high-velo
 
 ---
 
-## 🏗 Why this Architecture?
+##  Why this Architecture?
 
 ### 1. Atomic Voting (No Race Conditions)
 Most polling apps fail under concurrent load because they read a value, increment it in memory, and save it back. Flash-Poll uses **direct SQL atomic increments**:
@@ -31,7 +31,7 @@ No rounded corners, no soft gradients. The UI is designed to feel like a high-co
 
 ---
 
-## 🚦 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Go installed
@@ -57,7 +57,7 @@ npm run dev
 
 ---
 
-## 📡 API Contract
+##  API Contract
 
 | Endpoint | Method | Action |
 | :--- | :--- | :--- |
@@ -69,13 +69,13 @@ npm run dev
 
 ---
 
-## 🧪 Robustness Testing
+##  Robustness Testing
 The system includes a `stress_test.go` script that blasts the server with 100 concurrent votes.
 - **Panic Recovery**: Middleware ensures the binary doesn't crash on invalid inputs.
 - **Deadlock Protection**: Non-blocking SSE broker prevents slow clients from hanging the server.
 - **Rate Limiting**: Built-in protection against automated vote-spamming (500ms cooldown per IP).
 
-## ⚖️ Engineering Tradeoffs
+## ️ Engineering Tradeoffs
 1. **SSE vs WebSockets**: I chose SSE (Server-Sent Events) because the application is primarily read-heavy (clients receiving updates). SSE is more efficient, handles reconnection automatically, and is simpler to implement than full-duplex WebSockets.
 2. **SQLite vs PostgreSQL**: SQLite was chosen for this MVP to provide a "zero-config" experience for reviewers. However, the repository layer is decoupled, allowing a switch to PostgreSQL by simply changing the driver in `internal/db`.
 3. **Neo-Brutalist CSS**: Instead of a library like Tailwind or Bootstrap, I used raw CSS to keep the bundle size minimal and demonstrate my ability to build custom, high-fidelity UI from scratch.
