@@ -51,7 +51,7 @@ const PollCard = ({ poll, onUpdate, onDelete, isHighlighted }) => {
   return (
     <div
       className="poll-card"
-      style={isHighlighted ? { border: '6px solid var(--tech)', transform: 'scale(1.02)' } : {}}
+      style={isHighlighted ? { border: '6px solid var(--tech)', transform: 'scale(1.02)', boxShadow: '12px 12px 0px 0px #000' } : {}}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
         <span className={`tag tag-${poll.category}`}>{poll.category} {isHighlighted && "// TARGET"}</span>
@@ -76,17 +76,33 @@ const PollCard = ({ poll, onUpdate, onDelete, isHighlighted }) => {
             )}
 
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-              <span>{opt.option_text}</span>
-              {isRevealed && <span style={{ fontWeight: '900' }}>{Math.round(opt.percentage)}%</span>}
+              <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                {votedId === opt.id && <span style={{fontSize: '18px'}}>🎯</span>}
+                <span>{opt.option_text}</span>
+              </div>
+
+              {isRevealed && (
+                <span style={{ fontWeight: '900' }}>{Math.round(opt.percentage)}%</span>
+              )}
             </div>
           </button>
         ))}
       </div>
 
-      <div style={{ marginTop: '20px', borderTop: '3px solid #000', paddingTop: '15px' }}>
-        <div style={{ fontWeight: '800', fontSize: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', borderTop: '3px solid #000', paddingTop: '15px' }}>
+        <div style={{ fontWeight: '800', fontSize: '12px', textTransform: 'uppercase' }}>
           {poll.total_votes} SIGNALS // {new Date(poll.created_at).toLocaleDateString()}
         </div>
+
+        {!votedId && (
+          <button
+            className="tag"
+            style={{ cursor: 'pointer', background: isRevealed ? '#eee' : '#fff' }}
+            onClick={() => setShowStats(!showStats)}
+          >
+            {showStats ? 'HIDE ANALYTICS' : 'VIEW ANALYTICS'}
+          </button>
+        )}
       </div>
     </div>
   );

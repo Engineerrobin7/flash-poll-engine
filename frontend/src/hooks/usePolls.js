@@ -4,24 +4,22 @@ import { fetchPolls, API_BASE } from '../services/api';
 export const usePolls = () => {
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const reconnectTimeoutRef = useRef(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await fetchPolls();
       setPolls(data);
     } catch (e) {
-      setError(e.message);
+      console.error("Initial fetch failed:", e.message);
     } finally {
       setLoading(false);
     }
   }, []);
 
   const setupSSE = useCallback(() => {
-    // Consistent URL usage
+    // We use the consolidated /api/events route
     const eventSource = new EventSource(`${API_BASE}/events`);
 
     eventSource.onmessage = (event) => {
@@ -32,7 +30,7 @@ export const usePolls = () => {
           if (exists) {
             return prev.map(p => p.id === updatedPoll.id ? updatedPoll : p);
           }
-          return [updatedPoll, ...prev];
+          return [updatedPoll, ...prev]; // Add new poll to the top live
         });
       } catch (err) {
         console.error("SSE parse error", err);
@@ -40,7 +38,6 @@ export const usePolls = () => {
     };
 
     eventSource.onerror = (err) => {
-      console.log("SSE dropped. Reconnecting...");
       eventSource.close();
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = setTimeout(() => setupSSE(), 5000);
@@ -62,5 +59,5 @@ export const usePolls = () => {
   const updatePoll = (poll) => setPolls(prev => prev.map(p => p.id === poll.id ? poll : p));
   const removePoll = (id) => setPolls(prev => prev.filter(p => p.id !== id));
 
-  return { polls, loading, error, refresh, addPoll, updatePoll, removePoll };
+  return { polls, loading, refresh, addPoll, updatePoll, removePoll };
 };
