@@ -48,9 +48,9 @@ func main() {
 	r.Use(chimiddleware.Recoverer)
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:3000", "*"},
+		AllowedOrigins:   []string{"http://localhost:5173", "https://*.vercel.app", "https://*.netlify.app", "*"},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization"},
+		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization", "X-Request-Id"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
