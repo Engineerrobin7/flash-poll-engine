@@ -111,6 +111,16 @@ func (h *PollHandler) sendJSON(w http.ResponseWriter, status int, data interface
 	json.NewEncoder(w).Encode(data)
 }
 
+func (h *PollHandler) sendError(w http.ResponseWriter, status int, code, message string) {
+	log.Printf("API Error [%d] %s: %s", status, code, message)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	resp := ErrorResponse{}
+	resp.Error.Code = code
+	resp.Error.Message = message
+	json.NewEncoder(w).Encode(resp)
+}
+
 func (h *PollHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	polls, err := h.service.GetPolls(r.Context())
 	if err != nil {
