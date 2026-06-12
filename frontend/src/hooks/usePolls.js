@@ -1,10 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchPolls } from '../services/api';
+
+const getEventsUrl = () => {
+  if (import.meta.env.VITE_API_URL) return `${import.meta.env.VITE_API_URL}/events`;
+  return `http://${window.location.hostname}:8080/api/events`;
+};
 
 export const usePolls = () => {
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const reconnectTimeoutRef = useRef(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -19,26 +25,42 @@ export const usePolls = () => {
     }
   }, []);
 
-  useEffect(() => {
-    refresh();
-
-    // Setup SSE for real-time updates
-    const eventSource = new EventSource('http://localhost:8080/api/events');
+  const setupSSE = useCallback(() => {
+    const eventSource = new EventSource(getEventsUrl());
 
     eventSource.onmessage = (event) => {
-      const updatedPoll = JSON.parse(event.data);
-      setPolls(prev => prev.map(p => p.id === updatedPoll.id ? updatedPoll : p));
+      try {
+        const updatedPoll = JSON.parse(event.data);
+        setPolls(prev => prev.map(p => p.id === updatedPoll.id ? updatedPoll : p));
+      } catch (err) {
+        console.error("Failed to parse SSE data:", err);
+      }
     };
 
     eventSource.onerror = (err) => {
-      console.error("EventSource failed:", err);
+      console.error("SSE connection lost. Reconnecting in 5s...", err);
       eventSource.close();
+
+      // Prevent multiple concurrent timeouts
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+
+      reconnectTimeoutRef.current = setTimeout(() => {
+        setupSSE();
+      }, 5000);
     };
 
+    return eventSource;
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const es = setupSSE();
+
     return () => {
-      eventSource.close();
+      if (es) es.close();
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
     };
-  }, [refresh]);
+  }, [refresh, setupSSE]);
 
   const addPoll = (poll) => setPolls(prev => [poll, ...prev]);
   const updatePoll = (poll) => setPolls(prev => prev.map(p => p.id === poll.id ? poll : p));

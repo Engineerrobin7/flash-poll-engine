@@ -1,4 +1,11 @@
-const API_BASE = 'http://localhost:8080/api';
+// Dynamic API configuration
+const getApiBase = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  // Fallback for local development if VITE_API_URL is missing
+  return `http://${window.location.hostname}:8080/api`;
+};
+
+const API_BASE = getApiBase();
 
 export const fetchPolls = async () => {
   const res = await fetch(`${API_BASE}/polls`);
@@ -41,4 +48,11 @@ export const deletePoll = async (pollId) => {
   });
   if (!res.ok) throw new Error('Failed to delete poll');
   return pollId;
+};
+
+export const fetchStats = async () => {
+  const res = await fetch(`${API_BASE.replace('/api', '')}/api/stats`);
+  if (!res.ok) throw new Error('Failed to fetch stats');
+  const json = await res.json();
+  return json.data;
 };

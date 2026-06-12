@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -17,7 +18,11 @@ var (
 
 func RateLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Strip port from RemoteAddr
 		ip := r.RemoteAddr
+		if colonIndex := strings.LastIndex(ip, ":"); colonIndex != -1 {
+			ip = ip[:colonIndex]
+		}
 
 		mu.Lock()
 		if c, exists := clients[ip]; exists {

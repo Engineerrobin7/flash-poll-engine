@@ -218,12 +218,15 @@ func (r *PollRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *PollRepository) parseTime(t string) (importTime time.Time, err error) {
-	layouts := []string{"2006-01-02 15:04:05", "2006-01-02T15:04:05Z", time.RFC3339}
-	for _, layout := range layouts {
-		if parsed, err := time.Parse(layout, t); err == nil {
-			return parsed, nil
-		}
+func (r *PollRepository) GetStats(ctx context.Context) (int, int, error) {
+	var pollCount, voteCount int
+	err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM polls").Scan(&pollCount)
+	if err != nil {
+		return 0, 0, err
 	}
-	return time.Time{}, nil
+	err = r.db.QueryRowContext(ctx, "SELECT COALESCE(SUM(vote_count), 0) FROM options").Scan(&voteCount)
+	if err != nil {
+		return 0, 0, err
+	}
+	return pollCount, voteCount, nil
 }

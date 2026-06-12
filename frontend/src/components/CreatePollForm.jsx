@@ -1,16 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { createPoll } from '../services/api';
+import { ToastContext } from '../App';
 
 const CreatePollForm = ({ onCreated }) => {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('Tech');
   const [opts, setOpts] = useState(['', '']);
   const [busy, setBusy] = useState(false);
+  const { showToast } = useContext(ToastContext);
 
   const save = async (e) => {
     e.preventDefault();
     const cleanOpts = opts.filter(o => o.trim());
-    if (cleanOpts.length < 2) return alert("MINIMUM 2 CHOICES REQUIRED.");
+    if (cleanOpts.length < 2) {
+      showToast("ERROR: MINIMUM 2 CHOICES REQUIRED");
+      return;
+    }
 
     setBusy(true);
     try {
@@ -22,8 +27,9 @@ const CreatePollForm = ({ onCreated }) => {
       onCreated(data);
       setQ('');
       setOpts(['', '']);
+      showToast("SIGNAL BROADCAST SUCCESSFUL");
     } catch (err) {
-      alert("BROADCAST FAILED: " + err.message);
+      showToast("BROADCAST FAILED: " + err.message);
     } finally {
       setBusy(false);
     }

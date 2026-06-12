@@ -74,11 +74,20 @@ The system includes a `stress_test.go` script that blasts the server with 100 co
 - **Panic Recovery**: Middleware ensures the binary doesn't crash on invalid inputs.
 - **Deadlock Protection**: Non-blocking SSE broker prevents slow clients from hanging the server.
 - **Rate Limiting**: Built-in protection against automated vote-spamming (500ms cooldown per IP).
+- **Graceful Shutdown**: Handles OS signals (SIGINT/SIGTERM) to close DB connections and finish in-flight requests cleanly.
 
-## ️ Engineering Tradeoffs
-1. **SSE vs WebSockets**: I chose SSE (Server-Sent Events) because the application is primarily read-heavy (clients receiving updates). SSE is more efficient, handles reconnection automatically, and is simpler to implement than full-duplex WebSockets.
-2. **SQLite vs PostgreSQL**: SQLite was chosen for this MVP to provide a "zero-config" experience for reviewers. However, the repository layer is decoupled, allowing a switch to PostgreSQL by simply changing the driver in `internal/db`.
-3. **Neo-Brutalist CSS**: Instead of a library like Tailwind or Bootstrap, I used raw CSS to keep the bundle size minimal and demonstrate my ability to build custom, high-fidelity UI from scratch.
+## 🚀 Production Readiness
+- **Observability**: Chi standard middleware for `RequestID` and `RealIP` tracking.
+- **Health Checks**: Dedicated `/health` endpoint for uptime monitoring.
+- **Accessibility**: ARIA-labeled components for screen-reader compatibility.
+- **UX Scalability**: Category-based dashboard filtering for large datasets.
+
+## ⚖️ Engineering Tradeoffs & Roadmap
+1. **SSE vs WebSockets**: I chose SSE (Server-Sent Events) because the application is primarily read-heavy. SSE is more efficient, handles reconnection automatically (implemented with exponential backoff logic), and is simpler to scale than full-duplex WebSockets.
+2. **SQLite vs PostgreSQL**: SQLite was chosen for this MVP to provide a "zero-config" experience. In a production environment with high write-concurrency, the repository layer is designed to be easily swapped for **PostgreSQL** to handle row-level locking more efficiently.
+3. **Observability at Scale**: The current `Broker` uses in-memory channels. To scale this across multiple server instances (horizontal scaling), I would migrate the broadcasting logic to **Redis Pub/Sub**.
+4. **Session Tracking**: To keep this MVP atomic and focused on performance, per-user session tracking (preventing multiple votes from the same user) was omitted but is the first item on the v2 roadmap.
+5. **Rate Limiting**: I implemented a custom IP-based rate limiter that strips port information to prevent bypasses, ensuring the system remains protected against automated "vote-bombing."
 
 ---
 *Built with focus and coffee for the LeMiCi Technical Assessment.*
