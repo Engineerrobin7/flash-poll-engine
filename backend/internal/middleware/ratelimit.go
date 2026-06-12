@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"sync"
@@ -18,7 +19,6 @@ var (
 
 func RateLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Strip port from RemoteAddr
 		ip := r.RemoteAddr
 		if colonIndex := strings.LastIndex(ip, ":"); colonIndex != -1 {
 			ip = ip[:colonIndex]
@@ -26,10 +26,17 @@ func RateLimit(next http.Handler) http.Handler {
 
 		mu.Lock()
 		if c, exists := clients[ip]; exists {
-			// Limit to 1 request every 500ms
 			if time.Since(c.lastSeen) < 500*time.Millisecond {
 				mu.Unlock()
-				http.Error(w, "TOO MANY SIGNALS. SLOW DOWN.", http.StatusTooManyRequests)
+				// Send JSON error instead of plain text
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusTooManyRequests)
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"error": map[string]string{
+						"code":    "RATE_LIMIT_EXCEEDED",
+						"message": "TOO MANY SIGNALS. SLOW DOWN.",
+					},
+				})
 				return
 			}
 		}

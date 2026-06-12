@@ -2,20 +2,35 @@
 const getApiBase = () => {
   let url = import.meta.env.VITE_API_URL;
   if (url) {
-    console.log("ENGINE: Using Environment API URL:", url);
     return url.endsWith('/') ? url.slice(0, -1) : url;
   }
-  const fallback = `http://${window.location.hostname}:8080/api`;
-  console.warn("ENGINE: No VITE_API_URL found. Falling back to:", fallback);
-  return fallback;
+  return `http://${window.location.hostname}:8080/api`;
 };
 
 const API_BASE = getApiBase();
 
+// Helper to handle responses safely
+const handleResponse = async (res) => {
+  const contentType = res.headers.get("content-type");
+
+  // If not JSON, it's likely a server error or rate limit text
+  if (!contentType || !contentType.includes("application/json")) {
+    const text = await res.text();
+    throw new Error(text || `Server Error: ${res.status}`);
+  }
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.error?.message || json.message || 'API Request Failed');
+  }
+
+  return json;
+};
+
 export const fetchPolls = async () => {
   const res = await fetch(`${API_BASE}/polls`);
-  if (!res.ok) throw new Error('Failed to fetch polls');
-  const json = await res.json();
+  const json = await handleResponse(res);
   return json.data;
 };
 
@@ -25,11 +40,7 @@ export const createPoll = async (pollData) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(pollData),
   });
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error?.message || 'Failed to create poll');
-  }
-  const json = await res.json();
+  const json = await handleResponse(res);
   return json.data;
 };
 
@@ -39,11 +50,7 @@ export const votePoll = async (pollId, optionId) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ option_id: optionId }),
   });
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error?.message || 'Failed to vote');
-  }
-  const json = await res.json();
+  const json = await handleResponse(res);
   return json.data;
 };
 
@@ -51,13 +58,12 @@ export const deletePoll = async (pollId) => {
   const res = await fetch(`${API_BASE}/polls/${pollId}`, {
     method: 'DELETE',
   });
-  if (!res.ok) throw new Error('Failed to delete poll');
+  await handleResponse(res);
   return pollId;
 };
 
 export const fetchStats = async () => {
   const res = await fetch(`${API_BASE.replace('/api', '')}/api/stats`);
-  if (!res.ok) throw new Error('Failed to fetch stats');
-  const json = await res.json();
+  const json = await handleResponse(res);
   return json.data;
 };
