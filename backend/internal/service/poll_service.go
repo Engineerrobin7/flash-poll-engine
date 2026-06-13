@@ -7,6 +7,7 @@ import (
 	"flashpoll/internal/domain"
 	"flashpoll/internal/repository"
 	"github.com/google/uuid"
+	"html" // Added for sanitization
 	"log"
 	"strings"
 	"time"
@@ -32,8 +33,8 @@ func (s *PollService) GetPolls(ctx context.Context) ([]domain.Poll, error) {
 }
 
 func (s *PollService) CreatePoll(ctx context.Context, question string, category domain.Category, optionTexts []string) (*domain.Poll, error) {
-	// Validation
-	question = strings.TrimSpace(question)
+	// BUG BOUNTY FIX: Sanitize Input to prevent XSS/Injection
+	question = html.EscapeString(strings.TrimSpace(question))
 	if len(question) < 5 || len(question) > 280 {
 		return nil, ErrInvalidInput
 	}
@@ -49,7 +50,7 @@ func (s *PollService) CreatePoll(ctx context.Context, question string, category 
 	normalizedOptions := make(map[string]bool)
 	var options []domain.Option
 	for _, text := range optionTexts {
-		trimmed := strings.TrimSpace(text)
+		trimmed := html.EscapeString(strings.TrimSpace(text))
 		// Collapse extra internal spaces
 		collapsed := strings.Join(strings.Fields(trimmed), " ")
 		if collapsed == "" || len(collapsed) > 80 {

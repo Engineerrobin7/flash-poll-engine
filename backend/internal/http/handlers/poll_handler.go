@@ -70,6 +70,14 @@ type VoteRequest struct {
 
 func (h *PollHandler) Vote(w http.ResponseWriter, r *http.Request) {
 	pollID := chi.URLParam(r, "id")
+	ip := middleware.GetIP(r)
+
+	// BUG BOUNTY FIX: Prevent Double Voting from same IP
+	if middleware.GlobalSessionStore.HasVoted(ip, pollID) {
+		h.sendError(w, http.StatusForbidden, "ALREADY_VOTED", "SIGNALS ALREADY RECORDED FOR THIS TARGET")
+		return
+	}
+
 	var req VoteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.sendError(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid JSON payload")
@@ -90,6 +98,9 @@ func (h *PollHandler) Vote(w http.ResponseWriter, r *http.Request) {
 		h.sendError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Unable to record vote")
 		return
 	}
+
+	// Lock the session for this IP and Poll
+	middleware.GlobalSessionStore.RecordVote(ip, pollID)
 
 	h.sendJSON(w, http.StatusOK, Response{Data: poll})
 }
